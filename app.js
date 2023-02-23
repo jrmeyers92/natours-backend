@@ -1,10 +1,17 @@
 const express = require('express');
 const morgan = require('morgan');
+const bodyParser = require('body-parser');
 
 const tourRouter = require('./routes/tourRoutes');
 const userRouter = require('./routes/userRoutes');
 
 const app = express();
+
+app.use(
+  bodyParser.urlencoded({
+    extended: true
+  })
+);
 
 // 1) MIDDLEWARES
 if (process.env.NODE_ENV === 'development') {
