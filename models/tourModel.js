@@ -1,4 +1,5 @@
 const mongoose = require('mongoose');
+const slugify = require('slugify');
 
 const tourSchema = mongoose.Schema(
   {
@@ -8,6 +9,7 @@ const tourSchema = mongoose.Schema(
       unique: true,
       trim: true
     },
+    slug: String,
     duration: {
       type: Number,
       required: [true, 'A Tour must have a duration']
@@ -56,6 +58,10 @@ const tourSchema = mongoose.Schema(
     },
     startDates: {
       type: [Date]
+    },
+    secretTour: {
+      type: Boolean,
+      default: false
     }
   },
   {
@@ -69,8 +75,27 @@ tourSchema.virtual('durationWeeks').get(function() {
 });
 
 // DOCUMENT MIDDLEWARE: Runs before .save() and .create()
-tourSchema.pre('save', function() {
-  console.log(this);
+tourSchema.pre('save', function(next) {
+  this.slug = slugify(this.name, { lower: true });
+  next();
+});
+
+// tourSchema.post('save', function(doc, next) {
+//   console.log(doc);
+//   next();
+// });
+
+// QUERY MIDDLEWARE
+// /^find/ is regex for any word that starts with word find (find, findOne, etc.)
+tourSchema.pre(/^find/, function(next) {
+  this.find({ secretTour: { $ne: true } });
+  this.start = Date.now();
+  next();
+});
+
+tourSchema.post(/^find/, function(docs, next) {
+  console.log(`Query took ${Date.now() - this.start} milliseconds`);
+  next();
 });
 
 const Tour = mongoose.model('Tour', tourSchema);
