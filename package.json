@@ -7,7 +7,7 @@
     "start:dev": "nodemon server.js",
     "start:prod": "NODE_ENV=production nodemon server.js"
   },
-  "author": "Jonas Schmedtmann",
+  "author": "Jake Meyers",
   "license": "ISC",
   "dependencies": {
     "body-parser": "^1.20.2",
@@ -15,7 +15,8 @@
     "express": "^4.16.4",
     "mongoose": "^5.13.16",
     "morgan": "^1.9.1",
-    "slugify": "^1.6.5"
+    "slugify": "^1.6.5",
+    "validator": "^13.9.0"
   },
   "devDependencies": {
     "eslint": "^5.16.0",

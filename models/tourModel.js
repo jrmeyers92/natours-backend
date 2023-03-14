@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 const slugify = require('slugify');
+const validator = require('validator');
 
 const tourSchema = mongoose.Schema(
   {
@@ -7,7 +8,10 @@ const tourSchema = mongoose.Schema(
       type: String,
       required: [true, 'A tour must have a name'],
       unique: true,
-      trim: true
+      trim: true,
+      maxLength: [40, 'A tour name must have 40 characters or less'],
+      minLength: [10, 'A tour name must have 10 characters or more']
+      // validate: [validator.isAlpha, 'Tour name must only contain characters']
     },
     slug: String,
     duration: {
@@ -20,11 +24,17 @@ const tourSchema = mongoose.Schema(
     },
     difficulty: {
       type: String,
-      required: [true, 'A tour must have a difficult rating']
+      required: [true, 'A tour must have a difficult rating'],
+      enum: {
+        values: ['easy', 'medium', 'difficult'],
+        message: 'difficulty must be easy, medium, or diffciult'
+      }
     },
     ratingsAverage: {
       type: Number,
-      default: 4.5
+      default: 4.5,
+      min: [1, 'A rating must be above 1'],
+      max: [5, 'A rating must be below 5']
     },
     ratingsQuantity: {
       type: Number,
@@ -34,7 +44,16 @@ const tourSchema = mongoose.Schema(
       type: Number,
       required: [true, 'A tour must have a name']
     },
-    priceDiscount: Number,
+    priceDiscount: {
+      type: Number,
+      validate: {
+        validator: function(value) {
+          // this keyword only points to document on NEW document createion (not on update)
+          return value < this.price;
+        },
+        message: 'discount price ({VALUE}) must be less than price'
+      }
+    },
     summary: {
       type: String,
       trim: true,
@@ -95,6 +114,13 @@ tourSchema.pre(/^find/, function(next) {
 
 tourSchema.post(/^find/, function(docs, next) {
   console.log(`Query took ${Date.now() - this.start} milliseconds`);
+  next();
+});
+
+// AGGREGATION MIDDLEWARE
+// filters out sercret tours for aggregate queryies
+tourSchema.pre('aggregate', function(next) {
+  this.pipeline().unshift({ $match: { secretTour: { $ne: true } } });
   next();
 });
 
